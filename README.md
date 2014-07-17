@@ -1,0 +1,2 @@
+github-omnifocus-sync
+=====================
