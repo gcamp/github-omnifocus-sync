@@ -1,0 +1,23 @@
+{
+  "name": "github-omnifocus-sync",
+  "version": "0.0.0",
+  "description": "Sync github and Omnifocus",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/gcamp/github-omnifocus-sync.git"
+  },
+  "author": "Guillaume Campagna",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/gcamp/github-omnifocus-sync/issues"
+  },
+  "homepage": "https://github.com/gcamp/github-omnifocus-sync",
+  "dependencies": {
+    "applescript": "0.2.x",
+    "github": "0.2.x"
+  }
+}
