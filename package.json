@@ -18,6 +18,8 @@
   "homepage": "https://github.com/gcamp/github-omnifocus-sync",
   "dependencies": {
     "applescript": "0.2.x",
-    "github": "0.2.x"
+    "github": "0.2.x",
+    "applescript": "0.2.x",
+    "async": "0.9.x"
   }
 }

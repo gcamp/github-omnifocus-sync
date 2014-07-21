@@ -10,6 +10,8 @@ function configValueForKey(key, callback) {
 }
 
 var github_helper = require('./github_helper');
+var omnifocus = require('./omnifocus');
+var async = require("async");
 configValueForKey("user", function (user) {
   configValueForKey("password", function (password) {
     var GitHubApi = require("github");
@@ -28,8 +30,23 @@ configValueForKey("user", function (user) {
       filter: "all"
     }, function(err, res) {
       var ownerMap = github_helper.group_issues(res);
-      
-      console.log(JSON.stringify(ownerMap));
+
+      var asyncTasks = [];
+      for (var ownerName in ownerMap) {
+        asyncTasks.push(function(callback){
+          omnifocus.create_folder_if_possible(ownerName + " projects", function () {
+            var projects = ownerMap[ownerName];
+            for (var projectIndex in projects) {
+              var project = projects[projectIndex];
+            }
+            callback();
+          });
+        });
+      }
+
+      async.parallel(asyncTasks, function(){
+        console.log("everything is done!")
+      });
     });
   });
 });
