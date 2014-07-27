@@ -38,6 +38,8 @@ configValueForKey("user", function (user) {
             var projects = ownerMap[ownerName];
             for (var projectIndex in projects) {
               var project = projects[projectIndex];
+
+              
             }
             callback();
           });

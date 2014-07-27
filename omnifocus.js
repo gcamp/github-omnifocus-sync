@@ -9,12 +9,20 @@ module.exports.create_folder_if_possible = function (folder_name, callback) {
   create_object_if_possible(folder_name, 'folder', callback);
 }
 
-module.exports.create_project_if_possible = function (project_name, callback) {
-  create_object_if_possible(project_name, 'project', callback);
+module.exports.create_folder_if_possible_in_group = function (folder_name, group, callback) {
+  create_object_if_possible(folder_name, group, 'folder', callback);
+}
+
+module.exports.create_project_if_possible_in_group = function (project_name, group, callback) {
+  create_object_if_possible(project_name, group, 'project', callback);
 }
 
 function create_object_if_possible(name, type, callback) {
-  var script = 'try\nfirst flattened ' + type + ' where its name = \"' + name + '\"\non error errStr number errorNumber\ntell it to make new ' + type + ' with properties {name:\"' + name + '\"}\nend try'
+  create_object_if_possible_in_group(name, "", type, callback);
+}
+
+function create_object_if_possible_in_group(name, group, type, callback) {
+  var script = 'try\nset parent to first flattened folder where its name = \"' + group + '\"\ntry\nfirst flattened folder where its name = \"' + name + '\"\non error errStr number errorNumber\ntell it to make new \"' + type + '\" with properties {name:\"' + name + '\", parent task:parent}\nend try\non error errStr number errorNumber\ntry\nfirst flattened folder where its name = test\non error errStr number errorNumber\ntell it to make new "type" with properties {name:\"' + name + '\"}\nend try\nend try';
   executeScript(script, function(err, res) {
     if (err) {
       console.log(err);
