@@ -33,15 +33,29 @@ configValueForKey("user", function (user) {
 
       var asyncTasks = [];
       for (var ownerName in ownerMap) {
-        asyncTasks.push(function(callback){
-          omnifocus.create_folder_if_possible(ownerName + " projects", function () {
+        var ownerFolderName = ownerName + " projects";
+        asyncTasks.push(function(firstCallback){
+          omnifocus.create_folder_if_possible(ownerFolderName, function () {
+            var projectTasks = [];
+
             var projects = ownerMap[ownerName];
             for (var projectIndex in projects) {
               var project = projects[projectIndex];
 
-              
+              var projectName = project[0]["repository"]["name"];
+              console.log("type" + " of name " + projectName + " in " + ownerFolderName);
+
+              projectTasks.push(function(callback){
+                omnifocus.create_folder_if_possible_in_group(projectName, ownerFolderName, function () {
+                  callback();
+                });
+              });
             }
-            callback();
+
+            async.parallel(projectTasks, function(){
+              console.log("everything " + ownerName + " is done!");
+              firstCallback();
+            });
           });
         });
       }

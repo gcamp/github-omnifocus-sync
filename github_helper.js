@@ -18,7 +18,7 @@ module.exports.group_issues = function (api_response) {
       if (!issues) {
         issues = [];
       }
-      issues.push(issue["title"]);
+      issues.push(issue);
       projectsMap[repoName] = issues;
 
       ownerMap[owner] = projectsMap;
