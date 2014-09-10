@@ -21,9 +21,12 @@ function createFoldersAndIssues(projects, folderName, callback) {
         omnifocus.create_folder_if_possible_in_group(projectName, folderName, function () {
           var hasMilestones = github_helper.issues_have_milestones(issues);
 
-          console.log(projectName + " has milesones " + hasMilestones);
-
-          callback();
+          if (hasMilestones) {
+            createProjectsForMilestones(issues, projectName, callback);
+          }
+          else {
+            createProjectsForLabels(issues, projectName, callback);
+          }
         });
       });
     })(issues);
@@ -32,6 +35,31 @@ function createFoldersAndIssues(projects, folderName, callback) {
   async.parallel(projectTasks, function(){
     callback();
   });
+}
+
+function createProjectsForMilestones(issues, folderName, callback) {
+  var issueTasks = [];
+
+  for (var issueIndex in issues) {
+    var issue = issues[issueIndex];
+
+    (function(issue) {
+      issueTasks.push(function (callback) {
+        var milestoneName = issue["milestone"] == null ? "No milestone" : issue["milestone"]["title"];
+        omnifocus.create_project_if_possible_in_group(milestoneName, folderName, function () {
+          callback();
+        });
+      });
+    })(issue);
+  }
+
+  async.parallel(issueTasks, function(){
+    callback();
+  });
+}
+
+function createProjectsForLabels(issues, folderName, callback) {
+
 }
 
 var github_helper = require('./github_helper');
