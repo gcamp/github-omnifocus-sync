@@ -27,37 +27,39 @@ configValueForKey("user", function (user) {
     });
 
     github.issues.getAll({
-      filter: "all"
+      //filter: "all"
     }, function(err, res) {
       var ownerMap = github_helper.group_issues(res);
 
       var asyncTasks = [];
       for (var ownerName in ownerMap) {
-        var ownerFolderName = ownerName + " projects";
-        asyncTasks.push(function(firstCallback){
-          omnifocus.create_folder_if_possible(ownerFolderName, function () {
-            var projectTasks = [];
+        (function(ownerName) {
+          asyncTasks.push(function(firstCallback){
+            var ownerFolderName = ownerName + " projects";
+            omnifocus.create_folder_if_possible(ownerFolderName, function () {
+              var projectTasks = [];
 
-            var projects = ownerMap[ownerName];
-            for (var projectIndex in projects) {
-              var project = projects[projectIndex];
+              var projects = ownerMap[ownerName];
+              for (var projectIndex in projects) {
+                var project = projects[projectIndex];
 
-              var projectName = project[0]["repository"]["name"];
-              console.log("type" + " of name " + projectName + " in " + ownerFolderName);
+                var projectName = project[0]["repository"]["name"];
 
-              projectTasks.push(function(callback){
-                omnifocus.create_folder_if_possible_in_group(projectName, ownerFolderName, function () {
-                  callback();
-                });
+                (function(projectName) {
+                  projectTasks.push(function (callback) {
+                    omnifocus.create_folder_if_possible_in_group(projectName, ownerFolderName, function () {
+                      callback();
+                    });
+                  });
+                })(projectName);
+              }
+
+              async.parallel(projectTasks, function(){
+                firstCallback();
               });
-            }
-
-            async.parallel(projectTasks, function(){
-              console.log("everything " + ownerName + " is done!");
-              firstCallback();
             });
           });
-        });
+        })(ownerName);
       }
 
       async.parallel(asyncTasks, function(){

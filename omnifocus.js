@@ -22,7 +22,6 @@ function create_object_if_possible(name, type, callback) {
 }
 
 function create_object_if_possible_in_group(name, group, type, callback) {
-  console.log(type + " of name " + name + " in " + group);
   var script = 'try\nset parent_folder to first flattened folder where its name = \"' + group + '\"\ntry\nfirst flattened folder where its name = \"' + name + '\" and container = parent_folder\non error errStr number errorNumber\ntell parent_folder to make new ' + type + ' with properties {name:\"' + name + '\"}\nend try\non error errStr number errorNumber\ntry\nfirst flattened folder where its name = \"' + name + '\"\non error errStr number errorNumber\ntell it to make new ' + type + ' with properties {name:\"' + name + '\"}\nend try\nend try';
   executeScript(script, function(err, res) {
     if (err) {
