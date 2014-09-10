@@ -9,6 +9,31 @@ function configValueForKey(key, callback) {
     });
 }
 
+function createFoldersAndIssues(projects, folderName, callback) {
+  var projectTasks = [];
+  for (var projectIndex in projects) {
+    var issues = projects[projectIndex];
+    var projectName = issues[0]["repository"]["name"];
+
+    (function(issues) {
+      projectTasks.push(function (callback) {
+        var projectName = issues[0]["repository"]["name"];
+        omnifocus.create_folder_if_possible_in_group(projectName, folderName, function () {
+          var hasMilestones = github_helper.issues_have_milestones(issues);
+
+          console.log(projectName + " has milesones " + hasMilestones);
+
+          callback();
+        });
+      });
+    })(issues);
+  }
+
+  async.parallel(projectTasks, function(){
+    callback();
+  });
+}
+
 var github_helper = require('./github_helper');
 var omnifocus = require('./omnifocus');
 var async = require("async");
@@ -27,36 +52,18 @@ configValueForKey("user", function (user) {
     });
 
     github.issues.getAll({
-      //filter: "all"
     }, function(err, res) {
       var ownerMap = github_helper.group_issues(res);
 
       var asyncTasks = [];
       for (var ownerName in ownerMap) {
         (function(ownerName) {
-          asyncTasks.push(function(firstCallback){
+          asyncTasks.push(function(callback){
             var ownerFolderName = ownerName + " projects";
             omnifocus.create_folder_if_possible(ownerFolderName, function () {
-              var projectTasks = [];
-
               var projects = ownerMap[ownerName];
-              for (var projectIndex in projects) {
-                var project = projects[projectIndex];
 
-                var projectName = project[0]["repository"]["name"];
-
-                (function(projectName) {
-                  projectTasks.push(function (callback) {
-                    omnifocus.create_folder_if_possible_in_group(projectName, ownerFolderName, function () {
-                      callback();
-                    });
-                  });
-                })(projectName);
-              }
-
-              async.parallel(projectTasks, function(){
-                firstCallback();
-              });
+              createFoldersAndIssues(projects, ownerFolderName, callback);
             });
           });
         })(ownerName);

@@ -27,3 +27,15 @@ module.exports.group_issues = function (api_response) {
 
   return ownerMap;
 }
+
+module.exports.issues_have_milestones = function(issues) {
+  for (var issueIndex in issues) {
+    var issue = issues[issueIndex];
+
+    if (issue["milestone"] != null) {
+      return true;
+    }
+  }
+
+  return false;
+}
