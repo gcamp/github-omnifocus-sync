@@ -30,3 +30,13 @@ function create_object_if_possible_in_group(name, group, type, callback) {
     callback();
   });
 }
+
+function create_task_if_possible_in_project(name, project, callback) {
+  var script = 'try\nset parent_project to first flattened project where its name = \"' + project + '\"\ntry\nfirst flattened project where its name = \"' + name + '\" and container = parent_project\non error errStr number errorNumber\ntell parent_project to make new task with properties {name:\"' + name + '\"}\nend try\non error errStr number errorNumber\ntry\nfirst flattened project where its name = \"' + name + '\"\non error errStr number errorNumber\ntell it to make new task with properties {name:\"' + name + '\"}\nend try\nend try';
+  executeScript(script, function(err, res) {
+    if (err) {
+      console.log(err);
+    }
+    callback();
+  });
+}
