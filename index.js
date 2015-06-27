@@ -1,3 +1,7 @@
+var github_helper = require('./github_helper');
+var omnifocus = require('./omnifocus');
+var async = require("async");
+
 var exec = require('child_process').exec;
 function execute(command, callback){
     exec(command, function(error, stdout, stderr){ callback(stdout); });
@@ -18,16 +22,18 @@ function createFoldersAndIssues(projects, folderName, callback) {
     (function(issues) {
       projectTasks.push(function (callback) {
         var projectName = issues[0]["repository"]["name"];
-        omnifocus.create_folder_if_possible_in_group(projectName, folderName, function () {
-          var hasMilestones = github_helper.issues_have_milestones(issues);
 
-          if (hasMilestones) {
-            createProjectsForMilestones(issues, projectName, callback);
-          }
-          else {
-            createProjectsForLabels(issues, projectName, callback);
-          }
-        });
+        if (github_helper.issues_have_milestones(issues)) {
+          omnifocus.create_folder_if_possible_in_group(projectName, folderName, function () {
+              createProjectsForMilestones(issues, projectName, callback);
+          });
+        }
+        else {
+          omnifocus.create_project_if_possible_in_group(projectName, folderName, function () {
+            callback();
+          });
+        }
+
       });
     })(issues);
   }
@@ -38,6 +44,8 @@ function createFoldersAndIssues(projects, folderName, callback) {
 }
 
 function createProjectsForMilestones(issues, folderName, callback) {
+  console.log("Updating project " + folderName + " based on milestones");
+
   var issueTasks = [];
 
   for (var issueIndex in issues) {
@@ -46,6 +54,7 @@ function createProjectsForMilestones(issues, folderName, callback) {
     (function(issue) {
       issueTasks.push(function (callback) {
         var milestoneName = issue["milestone"] == null ? "No milestone" : issue["milestone"]["title"];
+        console.log("Updating milestone " + milestoneName + " for " + folderName);
         omnifocus.create_project_if_possible_in_group(milestoneName, folderName, function () {
           callback();
         });
@@ -58,15 +67,7 @@ function createProjectsForMilestones(issues, folderName, callback) {
   });
 }
 
-function createProjectsForLabels(issues, folderName, callback) {
-
-}
-
-var github_helper = require('./github_helper');
-var omnifocus = require('./omnifocus');
-var async = require("async");
-configValueForKey("user", function (user) {
-  configValueForKey("password", function (password) {
+configValueForKey("of-oauth-token", function (token) {
     var GitHubApi = require("github");
 
     var github = new GitHubApi({
@@ -74,19 +75,19 @@ configValueForKey("user", function (user) {
     });
 
     github.authenticate({
-      type: "basic",
-      username: user,
-      password: password
+      type: "oauth",
+      token: token
     });
 
-    github.issues.getAll({
-    }, function(err, res) {
+    github.issues.getAll({}, function(err, res) {
       var ownerMap = github_helper.group_issues(res);
 
       var asyncTasks = [];
       for (var ownerName in ownerMap) {
         (function(ownerName) {
           asyncTasks.push(function(callback){
+            console.log("Updating tasks for owner " + ownerName);
+
             var ownerFolderName = ownerName + " projects";
             omnifocus.create_folder_if_possible(ownerFolderName, function () {
               var projects = ownerMap[ownerName];
@@ -101,5 +102,4 @@ configValueForKey("user", function (user) {
         console.log("everything is done!")
       });
     });
-  });
 });
